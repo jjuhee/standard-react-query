@@ -6,9 +6,8 @@ import { FlexDiv } from "./styles";
 import RightMarginBox from "../common/RightMarginBox";
 import "./styles";
 import { StyledDiv } from "./styles";
-import { useDispatch, useSelector } from "react-redux";
-import { v4 as uuidv4 } from "uuid";
-import { addTodo } from "../../modules/todos";
+import { addTodo } from "../../../api/todos";
+import { useMutation, useQueryClient } from "react-query";
 
 /**
  * 컴포넌트 개요 : Todo 메인 페이지에서 제목과 내용을 입력하는 영역
@@ -17,10 +16,14 @@ import { addTodo } from "../../modules/todos";
  * @returns Input 컴포넌트
  */
 function Input() {
-  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
 
-  // useSelector를 통한, store의 값 접근
-  const todos = useSelector((state) => state.todos);
+  const mutation = useMutation(addTodo, {
+    onSuccess: (data) => {
+      console.log("data", data);
+      queryClient.invalidateQueries("todos");
+    },
+  });
 
   // 컴포넌트 내부에서 사용할 state 2개(제목, 내용) 정의
   const [title, setTitle] = useState("");
@@ -53,7 +56,7 @@ function Input() {
   };
 
   // form 태그 내부에서의 submit이 실행된 경우 호출되는 함수
-  const handleSubmitButtonClick = (event) => {
+  const handleSubmitButtonClick = async (event) => {
     // submit의 고유 기능인, 새로고침(refresh)을 막아주는 역함
     event.preventDefault();
 
@@ -63,27 +66,16 @@ function Input() {
       return getErrorMsg("01", { title, contents });
     }
 
-    // 이미 존재하는 todo 항목이면 오류
-    const validationArr = todos.filter(
-      (item) => item.title === title && item.contents === contents
-    );
-
-    // "02" : 내용 중복 안내
-    if (validationArr.length > 0) {
-      return getErrorMsg("02", { title, contents });
-    }
-
     // 추가하려는 todo를 newTodo라는 객체로 세로 만듦
     const newTodo = {
       title,
       contents,
       isDone: false,
-      id: uuidv4(),
     };
 
     // todo를 추가하는 reducer 호출
     // 인자 : payload
-    dispatch(addTodo(newTodo));
+    mutation.mutate(newTodo);
 
     // state 두 개를 초기화
     setTitle("");
