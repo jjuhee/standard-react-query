@@ -8,6 +8,7 @@ import "./styles";
 import { StyledDiv } from "./styles";
 import { addTodo } from "../../../api/todos";
 import { useMutation, useQueryClient } from "react-query";
+import { QUERY_KEY } from "../../../query/keys.constant";
 
 /**
  * 컴포넌트 개요 : Todo 메인 페이지에서 제목과 내용을 입력하는 영역
@@ -21,7 +22,7 @@ function Input() {
   const mutation = useMutation(addTodo, {
     onSuccess: (data) => {
       console.log("data", data);
-      queryClient.invalidateQueries("todos");
+      queryClient.invalidateQueries(QUERY_KEY.TODOS);
     },
   });
 
